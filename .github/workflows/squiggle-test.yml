@@ -9,4 +9,4 @@ jobs:
     steps:
       - name: Fetch Squiggle tips
         run: |
-          curl "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json"
+          curl -H "User-Agent: github-actions" "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json"
