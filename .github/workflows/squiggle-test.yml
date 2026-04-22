@@ -7,31 +7,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch Squiggle tips
-        id: squiggle
-        run: |
-          curl -s -H "User-Agent: github-actions" \
-            "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json" \
-            > tips.json
-
-      - name: Create GitHub Issue with tips
-        uses: actions/github-script@v7
+      - name: Send test email via Gmail
+        uses: dawidd6/action-send-mail@v3
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const tips = fs.readFileSync('tips.json', 'utf8');
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
+          subject: "Squiggle automation test email"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          body: |
+            This is a test email.
 
-            const parsed = JSON.parse(tips);
-
-            const summary = parsed.tips
-              .slice(0, 9)
-              .map(t => `${t.tip} (${t.confidence}%) – ${t.hteam} vs ${t.ateam}`)
-              .join('\n');
-
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Squiggle tips update ${new Date().toISOString()}`,
-              body: summary
-            });
+            If you received this, GitHub Actions can send email via Gmail.
