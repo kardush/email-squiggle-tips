@@ -7,17 +7,29 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Send test email via Gmail
+      - name: Fetch Squiggle tips
+        run: |
+          curl -s -H "User-Agent: github-actions" \
+            "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json" \
+            > tips.json
+
+      - name: Format tips
+        run: |
+          jq -r '
+            .tips
+            | sort_by(.date)
+            | map("\(.tip) (\(.confidence)%) – \(.hteam) vs \(.ateam)")
+            | .[]
+          ' tips.json > body.txt
+
+      - name: Send Squiggle tips email
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          subject: "Squiggle automation test email"
+          subject: "AFL Squiggle Tips"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          body: |
-            This is a test email.
-
-            If you received this, GitHub Actions can send email via Gmail.
+          body_file: body.txt
