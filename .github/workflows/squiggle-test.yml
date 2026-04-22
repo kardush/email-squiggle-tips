@@ -22,9 +22,16 @@ jobs:
             const fs = require('fs');
             const tips = fs.readFileSync('tips.json', 'utf8');
 
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Squiggle tips update ${new Date().toISOString()}`,
-              body: tips
-            });
+            const parsed = JSON.parse(tips);
+
+const summary = parsed.tips
+  .slice(0, 9)
+  .map(t => `${t.tip} (${t.confidence}%) – ${t.hteam} vs ${t.ateam}`)
+  .join('\n');
+
+await github.rest.issues.create({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  title: `Squiggle tips update ${new Date().toISOString()}`,
+  body: summary
+});
