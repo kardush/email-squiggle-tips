@@ -22,6 +22,12 @@ jobs:
             | .[]
           ' tips.json > body.txt
 
+      - name: Load email body
+        run: |
+          echo "EMAIL_BODY<<EOF" >> $GITHUB_ENV
+          cat body.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Send Squiggle tips email
         uses: dawidd6/action-send-mail@v3
         with:
@@ -32,4 +38,4 @@ jobs:
           subject: "AFL Squiggle Tips"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          body_file: body.txt
+          body: ${{ env.EMAIL_BODY }}
