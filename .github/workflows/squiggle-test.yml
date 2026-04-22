@@ -1,0 +1,12 @@
+name: Squiggle Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Squiggle tips
+        run: |
+          curl "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json"
