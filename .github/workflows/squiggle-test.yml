@@ -13,29 +13,34 @@ jobs:
             "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json" \
             > tips.json
 
-      - name: Format tips by round
+      - name: Build HTML email body
         run: |
-          jq -r '
+          TODAY=$(date -u +"%Y-%m-%d")
+
+          jq -r --arg today "$TODAY" '
             .tips
+            | map(select(.date[0:10] >= $today))
             | sort_by(.round, .date)
             | group_by(.round)
             | map(
-                "ROUND \(. [0].round)\n"
+                "<h3>Round \(. [0].round)</h3><ul>"
                 + (
                     map(
-                      "\(.tip) by \(.margin|tonumber|abs|round) (\(.confidence)%) – \(.hteam) vs \(.ateam)"
+                      "<li><b>\(.tip)</b> by \(.margin|tonumber|abs|round) \
+                      (\(.confidence)%) – \(.hteam) vs \(.ateam)</li>"
                     )
-                    | join("\n")
+                    | join("")
                   )
+                + "</ul>"
               )
-            | join("\n\n")
-          ' tips.json > body.txt
+            | join("")
+          ' tips.json > body.html
 
-      - name: Load email body safely
+      - name: Load HTML body
         run: |
           {
-            echo "EMAIL_BODY<<EOF"
-            cat body.txt
+            echo "EMAIL_HTML<<EOF"
+            cat body.html
             echo "EOF"
           } >> "$GITHUB_ENV"
 
@@ -46,7 +51,7 @@ jobs:
           server_port: 587
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          subject: "AFL Squiggle Tips – All Rounds"
+          subject: "AFL Squiggle Tips – Upcoming Rounds"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          body: ${{ env.EMAIL_BODY }}
+          html_body: ${{ env.EMAIL_HTML }}
