@@ -23,11 +23,10 @@ jobs:
             | sort_by(.round, .date)
             | group_by(.round)
             | map(
-                "<h3>Round \(. [0].round)</h3><ul>"
+                "<h3>Round \(.[0].round)</h3><ul>"
                 + (
                     map(
-                      "<li><b>\(.tip)</b> by \(.margin|tonumber|abs|round) \
-                      (\(.confidence)%) – \(.hteam) vs \(.ateam)</li>"
+                      "<li><b>\(.tip)</b> by \(.margin|tonumber|abs|round) (\(.confidence)%) – \(.hteam) vs \(.ateam)</li>"
                     )
                     | join("")
                   )
