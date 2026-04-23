@@ -50,7 +50,7 @@ jobs:
           server_port: 587
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          subject: "AFL Squiggle Tips – Upcoming Rounds"
+          subject: "AFL AI prediction Tips – Upcoming Rounds"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
           html_body: ${{ env.EMAIL_HTML }}
