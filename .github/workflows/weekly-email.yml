@@ -1,0 +1,58 @@
+name: AFL AI prediction Tips – Weekly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * 2"   # Wed 9am Sydney (AEST)
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Squiggle tips
+        run: |
+          curl -s -H "User-Agent: github-actions" \
+            "https://api.squiggle.com.au/?q=tips;year=2026;source=1;format=json" \
+            > tips.json
+
+      - name: Build HTML email body
+        run: |
+          TODAY=$(date -u +"%Y-%m-%d")
+
+          jq -r --arg today "$TODAY" '
+            .tips
+            | map(select(.date[0:10] >= $today))
+            | sort_by(.round, .date)
+            | group_by(.round)
+            | map(
+                "<h3>Round \(.[0].round)</h3><ul>"
+                + (
+                    map(
+                      "<li><b>\(.tip)</b> by \(.margin|tonumber|abs|round) (\(.confidence)%) – \(.hteam) vs \(.ateam)</li>"
+                    )
+                    | join("")
+                  )
+                + "</ul>"
+              )
+            | join("")
+          ' tips.json > body.html
+
+      - name: Load HTML body
+        run: |
+          {
+            echo "EMAIL_HTML<<EOF"
+            cat body.html
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Send weekly email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
+          subject: "AFL AI prediction Tips – Upcoming Rounds"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: ${{ env.EMAIL_HTML }}
